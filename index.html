@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>En qué invertir — StockVerdict</title>
+  <meta name="description" content="Analizá acciones (NYSE/NASDAQ) con un score 0–100, fundamentos clave y calendario de dividendos. Datos en tiempo real vía Financial Modeling Prep." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1220'/%3E%3Cpath d='M18 38c6-10 10-14 14-14s8 4 14 14' stroke='%23ffffff' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand" role="button" tabindex="0" id="brandHome">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div class="brand__text">
+          <div class="brand__name">StockVerdict</div>
+          <div class="brand__tag">Indicadores · Veredicto · Gráfico</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav__item is-active" data-tab="analisis">Análisis</button>
+        <button class="nav__item" data-tab="movers">Top movers</button>
+        <button class="nav__item" data-tab="watchlist">Watchlist</button>
+        <button class="nav__item" data-tab="dividendos">Dividendos</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- TAB: ANÁLISIS -->
+    <section class="tab is-active" id="tab-analisis">
+      <div class="grid-2">
+        <!-- LEFT -->
+        <div>
+          <h1 class="h1">Seleccioná una acción y obtené una señal rápida de valuación.</h1>
+          <p class="lead">Combinamos <b>valuación</b>, <b>calidad</b> y <b>riesgo</b> para clasificar: <b>atractiva</b>, <b>en precio</b> o <b>exigida</b>.</p>
+
+          <div class="card">
+            <div class="card__head">
+              <div class="kicker">ACCIÓN (NYSE / NASDAQ)</div>
+            </div>
+
+            <div class="row row--gap">
+              <div class="col col--grow">
+                <div class="row row--gap">
+                  <input id="searchInput" class="input" placeholder="Buscar por ticker o nombre (ej. AAPL, Tesla, JPM)" />
+                  <button id="searchBtn" class="btn btn--ghost" type="button">Buscar</button>
+                </div>
+                <select id="tickerSelect" class="select mt10" aria-label="Seleccionar ticker">
+                  <option value="AAPL">Apple Inc. (AAPL)</option>
+                  <option value="MSFT">Microsoft (MSFT)</option>
+                  <option value="NVDA">NVIDIA (NVDA)</option>
+                  <option value="TSLA">Tesla (TSLA)</option>
+                  <option value="GOOGL">Alphabet (GOOGL)</option>
+                  <option value="AMZN">Amazon (AMZN)</option>
+                  <option value="META">Meta (META)</option>
+                  <option value="JPM">JPMorgan (JPM)</option>
+                  <option value="XOM">Exxon Mobil (XOM)</option>
+                </select>
+              </div>
+              <div class="col col--right">
+                <button id="analyzeBtn" class="btn" type="button">Analizar</button>
+                <div class="muted mt8">Fuente: FMP (stable)</div>
+              </div>
+            </div>
+
+            <div class="row row--gap mt12">
+              <div class="col">
+                <div class="label">Plantilla de scoring</div>
+                <select id="templateSelect" class="select">
+                  <option value="AUTO" selected>Auto (según sector)</option>
+                  <option value="TECH">Tech / Growth</option>
+                  <option value="BANKS">Bancos / Financieras</option>
+                  <option value="ENERGY">Energía</option>
+                  <option value="DEFAULT">General</option>
+                </select>
+              </div>
+              <div class="col col--right">
+                <button id="watchAddBtn" class="btn btn--ghost" type="button">+ Añadir a watchlist</button>
+              </div>
+              <div class="col col--right">
+                <div class="kicker" style="text-align:right">VEREDICTO</div>
+                <div id="verdictPill" class="pill pill--neutral">—</div>
+                <div id="confidenceText" class="muted" style="text-align:right;margin-top:6px">Confianza: —</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt16">
+            <div class="card__head">
+              <div class="kicker">ANÁLISIS BREVE</div>
+              <button class="collapse" data-collapse="#briefBody" aria-label="Colapsar">—</button>
+            </div>
+            <div id="briefBody">
+              <div class="h3" id="briefTitle">Resumen ejecutivo</div>
+              <p class="muted" id="briefText">Seleccioná una acción para ver lo más relevante según los indicadores.</p>
+              <div class="chips" id="briefChips"></div>
+            </div>
+          </div>
+
+          <p class="fineprint mt12">Señal cuantitativa con datos públicos. No constituye recomendación de inversión.</p>
+        </div>
+
+        <!-- RIGHT -->
+        <div>
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="kicker">GRÁFICO</div>
+                <div class="h3" id="chartTitle">—</div>
+              </div>
+              <div class="muted">TradingView</div>
+            </div>
+            <div class="chart">
+              <div id="tvContainer" class="tv"></div>
+              <div id="tvFallback" class="muted hidden" style="padding:12px">
+                No se pudo cargar el gráfico.
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt16">
+            <div class="card__head">
+              <div>
+                <div class="kicker">SNAPSHOT</div>
+                <div class="h3" id="snapName">—</div>
+                <div class="muted" id="snapMeta">—</div>
+              </div>
+              <div style="text-align:right">
+                <div class="kicker">PRECIO</div>
+                <div class="price" id="snapPrice">—</div>
+                <div class="muted" id="snapUpdated">—</div>
+              </div>
+            </div>
+
+            <div class="grid-metrics">
+              <div class="metric">
+                <div class="metric__k">P/E (TTM)</div>
+                <div class="metric__v" id="m_pe">—</div>
+                <div class="metric__h">Múltiplo sobre ganancias</div>
+              </div>
+              <div class="metric">
+                <div class="metric__k">ROE (TTM)</div>
+                <div class="metric__v" id="m_roe">—</div>
+                <div class="metric__h">Retorno sobre equity</div>
+              </div>
+              <div class="metric">
+                <div class="metric__k">P/S (TTM)</div>
+                <div class="metric__v" id="m_ps">—</div>
+                <div class="metric__h">Precio vs ventas</div>
+              </div>
+              <div class="metric">
+                <div class="metric__k">Debt/Equity</div>
+                <div class="metric__v" id="m_de">—</div>
+                <div class="metric__h">Apalancamiento</div>
+              </div>
+              <div class="metric">
+                <div class="metric__k">Margen neto</div>
+                <div class="metric__v" id="m_net">—</div>
+                <div class="metric__h">Rentabilidad</div>
+              </div>
+              <div class="metric">
+                <div class="metric__k">FCF Yield</div>
+                <div class="metric__v" id="m_fcfy">—</div>
+                <div class="metric__h">Flujo de caja libre</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="row row--gap">
+              <div class="col">
+                <div class="kicker">SCORE</div>
+                <div class="score" id="scoreBox">—</div>
+              </div>
+              <div class="col col--grow">
+                <div class="kicker">RAZONES PRINCIPALES</div>
+                <ul class="bullets" id="reasonsList">
+                  <li class="muted">Seleccioná una acción para ver el detalle.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt16 hidden" id="errorCard">
+            <div class="card__head">
+              <div class="kicker">ERROR</div>
+            </div>
+            <div class="muted" id="errorText">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: MOVERS -->
+    <section class="tab" id="tab-movers">
+      <div class="grid-2">
+        <div>
+          <h2 class="h2">Movimientos del día (US)</h2>
+          <p class="muted">Gainers, Losers y Most active desde FMP.</p>
+
+          <div class="card">
+            <div class="row row--gap">
+              <button class="chip is-active" data-mover="gainers" type="button">Gainers</button>
+              <button class="chip" data-mover="losers" type="button">Losers</button>
+              <button class="chip" data-mover="active" type="button">Most active</button>
+              <div class="col col--right muted" id="moversUpdated">—</div>
+            </div>
+
+            <div class="movers" id="moversList"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card__head">
+              <div class="kicker">TIP</div>
+            </div>
+            <p class="muted">Tocá un ticker para analizarlo en la pestaña “Análisis”.</p>
+            <div class="divider"></div>
+            <p class="muted">Si un ticker no carga métricas, puede ser por falta de cobertura del endpoint TTM en FMP para ese activo (por ejemplo, ADRs o listados no US).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: WATCHLIST -->
+    <section class="tab" id="tab-watchlist">
+      <div class="grid-2">
+        <div>
+          <h2 class="h2">Watchlist</h2>
+          <p class="muted">Guardada en tu navegador (local). Podés abrir un ticker para analizarlo.</p>
+
+          <div class="card">
+            <div class="row row--gap">
+              <button id="watchRefreshBtn" class="btn btn--ghost" type="button">Actualizar precios</button>
+              <button id="watchClearBtn" class="btn btn--ghost" type="button">Limpiar</button>
+              <div class="col col--right muted" id="watchUpdated">—</div>
+            </div>
+            <div class="watch" id="watchList"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card__head">
+              <div class="kicker">NOTA</div>
+            </div>
+            <p class="muted">El análisis completo se realiza en “Análisis”. En watchlist mostramos precio y cambio para seguir tus tickers.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: DIVIDENDOS -->
+    <section class="tab" id="tab-dividendos">
+      <div class="grid-2">
+        <div>
+          <h2 class="h2">Dividendos (NYSE/NASDAQ)</h2>
+          <p class="muted">Calendario de eventos de dividendos. Filtrá por ticker y elegí rango.</p>
+
+          <div class="card">
+            <div class="row row--gap">
+              <div class="col">
+                <div class="label">Rango</div>
+                <select id="divRange" class="select">
+                  <option value="30">Próximos 30 días</option>
+                  <option value="90" selected>Próximos 90 días</option>
+                  <option value="180">Próximos 180 días</option>
+                </select>
+              </div>
+              <div class="col col--grow">
+                <div class="label">Filtro (ticker)</div>
+                <input id="divFilter" class="input" placeholder="Ej: AAPL, MSFT" />
+              </div>
+              <div class="col col--right">
+                <button id="divLoadBtn" class="btn" type="button">Cargar</button>
+                <div class="muted mt8" id="divUpdated">—</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="tablewrap">
+              <table class="table" id="divTable">
+                <thead>
+                  <tr>
+                    <th>Empresa</th>
+                    <th>Dividend (Q)</th>
+                    <th>Ex-dividend</th>
+                    <th>Payable</th>
+                    <th>Monto por acción</th>
+                  </tr>
+                </thead>
+                <tbody id="divTbody">
+                  <tr><td colspan="5" class="muted">Cargá el calendario para ver eventos.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <p class="fineprint mt12">Los eventos pueden cambiar. Verificá siempre con la empresa/emisor.</p>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card__head">
+              <div class="kicker">CÓMO USARLO</div>
+            </div>
+            <ol class="muted">
+              <li>Elegí un rango (30/90/180 días).</li>
+              <li>Si querés, filtrá por ticker (ej. AAPL).</li>
+              <li>Cargá y ordená por fechas para planificar.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer container">
+    <div class="muted">Hecho para prototipo. Datos: Financial Modeling Prep. Gráfico: TradingView.</div>
+    <div class="muted"><a href="/api/diagnose" target="_blank" rel="noreferrer">Diagnóstico</a></div>
+  </footer>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>
