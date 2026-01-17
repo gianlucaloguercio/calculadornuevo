@@ -88,7 +88,7 @@
             </div>
           </div>
 
-          <div class="card mt16">
+          <div class="card mt16 card--focus" id="briefCard">
             <div class="card__head">
               <div class="kicker">ANÁLISIS BREVE</div>
               <button class="collapse" data-collapse="#briefBody" aria-label="Colapsar">—</button>
@@ -200,7 +200,7 @@
             <div class="row row--gap">
               <div class="col">
                 <div class="kicker">SCORE</div>
-                <div class="score" id="scoreBox">—</div>
+                <div class="score score--focus" id="scoreBox">—</div>
               </div>
               <div class="col col--grow">
                 <div class="kicker">RAZONES PRINCIPALES</div>
@@ -347,9 +347,11 @@
     </section>
   </main>
 
-  <footer class="footer container">
-    <div class="muted">Hecho para prototipo. Datos: Financial Modeling Prep. Gráfico: TradingView.</div>
-    <div class="muted"><a href="/api/diagnose" target="_blank" rel="noreferrer">Diagnóstico</a></div>
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="muted">Datos: Financial Modeling Prep · Gráfico: TradingView. Señal educativa, no recomendación.</div>
+      <a class="btn btn--ghost btn--tiny" href="https://www.linkedin.com/in/gianluca-loguercio-a2928b277/" target="_blank" rel="noopener noreferrer">Creado por Gianluca Loguercio</a>
+    </div>
   </footer>
 
   <script src="/assets/app.js"></script>
