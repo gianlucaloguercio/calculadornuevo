@@ -248,15 +248,31 @@ function bindCombobox(){
 
 function pillForVerdict(verdict){
   const pill = $("verdictPill");
-  pill.classList.remove("pill--good","pill--neutral","pill--bad");
+  pill.classList.remove("pill--good","pill--mid","pill--neutral","pill--bad");
   if (!verdict){
     pill.textContent = "—";
     pill.classList.add("pill--neutral");
     return;
   }
   pill.textContent = verdict.label || "—";
+
+  // Color por score (pedido):
+  // - 0 a 44: rojo
+  // - 45 a 60: amarillo
+  // - > 60: verde
+  const s = (verdict.score == null) ? null : Number(verdict.score);
+  if (Number.isFinite(s)){
+    if (s <= 44) pill.classList.add("pill--bad");
+    else if (s >= 45 && s <= 60) pill.classList.add("pill--mid");
+    else if (s > 60) pill.classList.add("pill--good");
+    else pill.classList.add("pill--neutral");
+    return;
+  }
+
+  // Fallback por tono si no hay score.
   if (verdict.tone === "good") pill.classList.add("pill--good");
   else if (verdict.tone === "bad") pill.classList.add("pill--bad");
+  else if (verdict.tone === "mid") pill.classList.add("pill--mid");
   else pill.classList.add("pill--neutral");
 }
 
@@ -391,7 +407,7 @@ async function analyze(){
     $("chartTitle").textContent = `${data.exchange ? `${normalizeExchangeForTV(data.exchange)}:` : ""}${data.symbol}`;
     renderChart(data.symbol, normalizeExchangeForTV(data.exchange));
 
-    pillForVerdict(data.verdict);
+    pillForVerdict({ ...(data.verdict || {}), score: data.score });
     $("confidenceText").textContent = `Confianza: ${data.confidence || "—"}`;
 
     renderBrief(data);
@@ -604,11 +620,13 @@ async function loadDividends(){
     }
 
     $("divTbody").innerHTML = items.map(it => {
-      const empresa = `${it.name ? escapeHtml(it.name) : escapeHtml(it.symbol)} <span class="muted">(${escapeHtml(it.symbol)})</span>`;
+      const name = it.name ? escapeHtml(it.name) : escapeHtml(it.symbol);
+      const sym = escapeHtml(it.symbol);
+      const empresaBtn = `<button class="linkbtn" type="button" data-divsym="${sym}" data-divname="${name}">${name} <span class="muted">(${sym})</span></button>`;
       const amount = (it.amount == null) ? "—" : `$${Number(it.amount).toFixed(4)}`;
       return `
         <tr>
-          <td>${empresa}</td>
+          <td>${empresaBtn}</td>
           <td>${escapeHtml(it.quarter || "—")}</td>
           <td>${escapeHtml(it.exDividendDate || "—")}</td>
           <td>${escapeHtml(it.payableDate || "—")}</td>
@@ -616,6 +634,18 @@ async function loadDividends(){
         </tr>
       `;
     }).join("");
+
+    // Interacción: tocar un ticker lo analiza.
+    $("divTbody").querySelectorAll("[data-divsym]").forEach(btn => {
+      btn.addEventListener("click", ()=>{
+        const sym = String(btn.dataset.divsym || "").toUpperCase();
+        const nm = String(btn.dataset.divname || sym);
+        if (!sym) return;
+        setSelected({ symbol: sym, name: nm, exchange: "" });
+        document.querySelector('.nav__item[data-tab="analisis"]').click();
+        analyze();
+      });
+    });
   }catch(e){
     $("divTbody").innerHTML = `<tr><td colspan="5" class="muted">Error: ${escapeHtml(e.message || "No se pudieron cargar dividendos")}</td></tr>`;
   }
