@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>En qué invertir — StockVerdict</title>
-  <meta name="description" content="Analizá acciones (NYSE/NASDAQ) con un score 0–100, fundamentos clave y calendario de dividendos. Datos en tiempo real vía Financial Modeling Prep." />
+  <title>enqueinvertir — Analizador de acciones US</title>
+  <meta name="description" content="Analizá acciones de NYSE/NASDAQ/AMEX con score 0–100, fundamentos clave, top movers, watchlist y calendario de dividendos. Datos en tiempo real vía Financial Modeling Prep." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1220'/%3E%3Cpath d='M18 38c6-10 10-14 14-14s8 4 14 14' stroke='%23ffffff' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
@@ -14,8 +14,8 @@
       <div class="brand" role="button" tabindex="0" id="brandHome">
         <div class="brand__mark" aria-hidden="true"></div>
         <div class="brand__text">
-          <div class="brand__name">StockVerdict</div>
-          <div class="brand__tag">Indicadores · Veredicto · Gráfico</div>
+          <div class="brand__name">enqueinvertir</div>
+          <div class="brand__tag">Acciones US · Score · Dividendos</div>
         </div>
       </div>
 
@@ -39,26 +39,26 @@
 
           <div class="card">
             <div class="card__head">
-              <div class="kicker">ACCIÓN (NYSE / NASDAQ)</div>
+              <div class="kicker">ACCIÓN (NYSE / NASDAQ / AMEX)</div>
             </div>
 
             <div class="row row--gap">
               <div class="col col--grow">
-                <div class="row row--gap">
-                  <input id="searchInput" class="input" placeholder="Buscar por ticker o nombre (ej. AAPL, Tesla, JPM)" />
-                  <button id="searchBtn" class="btn btn--ghost" type="button">Buscar</button>
+                <div class="combo">
+                  <div class="combo__wrap">
+                    <input id="tickerInput" class="input" placeholder="Buscar por ticker o nombre (ej. Apple, AAPL, JPM)" autocomplete="off" />
+                    <div id="suggestPanel" class="suggest hidden" role="listbox" aria-label="Sugerencias"></div>
+                  </div>
+                  <div class="muted mt8" id="selectedMeta">Seleccionado: Apple Inc. (AAPL) · NASDAQ</div>
                 </div>
-                <select id="tickerSelect" class="select mt10" aria-label="Seleccionar ticker">
-                  <option value="AAPL">Apple Inc. (AAPL)</option>
-                  <option value="MSFT">Microsoft (MSFT)</option>
-                  <option value="NVDA">NVIDIA (NVDA)</option>
-                  <option value="TSLA">Tesla (TSLA)</option>
-                  <option value="GOOGL">Alphabet (GOOGL)</option>
-                  <option value="AMZN">Amazon (AMZN)</option>
-                  <option value="META">Meta (META)</option>
-                  <option value="JPM">JPMorgan (JPM)</option>
-                  <option value="XOM">Exxon Mobil (XOM)</option>
-                </select>
+
+                <div class="chips mt10" id="quickPicks" aria-label="Atajos">
+                  <button class="chip" data-pick="AAPL" type="button">Apple (AAPL)</button>
+                  <button class="chip" data-pick="MSFT" type="button">Microsoft (MSFT)</button>
+                  <button class="chip" data-pick="NVDA" type="button">NVIDIA (NVDA)</button>
+                  <button class="chip" data-pick="TSLA" type="button">Tesla (TSLA)</button>
+                  <button class="chip" data-pick="JPM" type="button">JPM (JPM)</button>
+                </div>
               </div>
               <div class="col col--right">
                 <button id="analyzeBtn" class="btn" type="button">Analizar</button>
@@ -95,7 +95,19 @@
             </div>
             <div id="briefBody">
               <div class="h3" id="briefTitle">Resumen ejecutivo</div>
-              <p class="muted" id="briefText">Seleccioná una acción para ver lo más relevante según los indicadores.</p>
+              <p class="muted" id="briefSummary">Seleccioná una acción para ver lo más relevante según los indicadores.</p>
+
+              <div class="briefGrid mt12" id="briefGrid">
+                <div class="briefCol">
+                  <div class="label">A favor</div>
+                  <ul class="bullets" id="briefPros"><li class="muted">—</li></ul>
+                </div>
+                <div class="briefCol">
+                  <div class="label">A vigilar</div>
+                  <ul class="bullets" id="briefCons"><li class="muted">—</li></ul>
+                </div>
+              </div>
+
               <div class="chips" id="briefChips"></div>
             </div>
           </div>
@@ -137,6 +149,11 @@
 
             <div class="grid-metrics">
               <div class="metric">
+                <div class="metric__k">Market cap</div>
+                <div class="metric__v" id="m_mcap">—</div>
+                <div class="metric__h">Tamaño de compañía</div>
+              </div>
+              <div class="metric">
                 <div class="metric__k">P/E (TTM)</div>
                 <div class="metric__v" id="m_pe">—</div>
                 <div class="metric__h">Múltiplo sobre ganancias</div>
@@ -152,19 +169,29 @@
                 <div class="metric__h">Precio vs ventas</div>
               </div>
               <div class="metric">
+                <div class="metric__k">P/B (TTM)</div>
+                <div class="metric__v" id="m_pb">—</div>
+                <div class="metric__h">Precio vs libro</div>
+              </div>
+              <div class="metric">
                 <div class="metric__k">Debt/Equity</div>
                 <div class="metric__v" id="m_de">—</div>
                 <div class="metric__h">Apalancamiento</div>
               </div>
               <div class="metric">
-                <div class="metric__k">Margen neto</div>
+                <div class="metric__k">Margen neto (TTM)</div>
                 <div class="metric__v" id="m_net">—</div>
                 <div class="metric__h">Rentabilidad</div>
               </div>
               <div class="metric">
-                <div class="metric__k">FCF Yield</div>
-                <div class="metric__v" id="m_fcfy">—</div>
-                <div class="metric__h">Flujo de caja libre</div>
+                <div class="metric__k">Liquidez corriente</div>
+                <div class="metric__v" id="m_cr">—</div>
+                <div class="metric__h">Capacidad de corto plazo</div>
+              </div>
+              <div class="metric">
+                <div class="metric__k">Beta</div>
+                <div class="metric__v" id="m_beta">—</div>
+                <div class="metric__h">Sensibilidad al mercado</div>
               </div>
             </div>
 
@@ -220,7 +247,7 @@
             </div>
             <p class="muted">Tocá un ticker para analizarlo en la pestaña “Análisis”.</p>
             <div class="divider"></div>
-            <p class="muted">Si un ticker no carga métricas, puede ser por falta de cobertura del endpoint TTM en FMP para ese activo (por ejemplo, ADRs o listados no US).</p>
+            <p class="muted">Si un ticker no carga métricas, puede ser por falta de cobertura de ratios/TTM en FMP para ese activo (por ejemplo, ciertos ADRs o instrumentos no comunes).</p>
           </div>
         </div>
       </div>
@@ -258,7 +285,7 @@
     <section class="tab" id="tab-dividendos">
       <div class="grid-2">
         <div>
-          <h2 class="h2">Dividendos (NYSE/NASDAQ)</h2>
+          <h2 class="h2">Dividendos (NYSE/NASDAQ/AMEX)</h2>
           <p class="muted">Calendario de eventos de dividendos. Filtrá por ticker y elegí rango.</p>
 
           <div class="card">
@@ -288,9 +315,9 @@
                 <thead>
                   <tr>
                     <th>Empresa</th>
-                    <th>Dividend (Q)</th>
-                    <th>Ex-dividend</th>
-                    <th>Payable</th>
+                    <th>Dividendo (Q)</th>
+                    <th>Fecha ex-dividendo</th>
+                    <th>Fecha de pago</th>
                     <th>Monto por acción</th>
                   </tr>
                 </thead>

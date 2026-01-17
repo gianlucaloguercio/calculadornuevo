@@ -1,9 +1,15 @@
 // Shared helpers for Vercel serverless functions (Node.js)
+// Financial Modeling Prep (Stable API): https://financialmodelingprep.com/stable/
 const BASE = "https://financialmodelingprep.com/stable";
 
 function getApiKey(){
-  // Support both names to avoid configuration mistakes
-  return process.env.FMP_API_KEY || process.env.FMP_API_KEY || "";
+  // Support a few common variable names to reduce deployment errors.
+  return (
+    process.env.FMP_API_KEY ||
+    process.env.FMP_KEY ||
+    process.env.FMP_APIKEY ||
+    ""
+  ).trim();
 }
 
 function sendJson(res, status, payload){
@@ -20,7 +26,7 @@ function mustKey(res){
     sendJson(res, 500, {
       ok: false,
       error: "Falta la variable de entorno FMP_API_KEY en Vercel (Project Settings → Environment Variables).",
-      hint: "Asegurate de setearla y luego Redeploy (Deployments → Redeploy)."
+      hint: "Asegurate de setearla para Preview/Production y luego Redeploy (Deployments → Redeploy)."
     });
     return null;
   }
@@ -33,8 +39,12 @@ async function fmpFetch(path, params){
     if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
   });
   const res = await fetch(url.toString(), {
-    headers: { "Accept": "application/json", "User-Agent": "StockVerdict/1.0" },
+    headers: {
+      "Accept": "application/json",
+      "User-Agent": "enqueinvertir/1.0",
+    },
   });
+
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); } catch { data = null; }
